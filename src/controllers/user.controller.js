@@ -51,7 +51,7 @@ export async function signup(req, res) {
 
     const { password: removedPassword, ...modifiedUser } = user.toObject();
 
-    res.send({ detail: "Account Created successfully", user: modifiedUser }).json({detail: "Account created successfully"});
+    res.status(200).send({ detail: "Account Created successfully", user: modifiedUser }).json({detail: "Account created successfully"});
   } catch (e) {
     console.log(e);
     res.status(500).send({ detail: "Something went wrong!!" }).json({detail: "something went wrong"});
