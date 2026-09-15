@@ -1,48 +1,42 @@
 import Bmi from "../models/bmi.model.js";
-import jwt from "jsonwebtoken";
-import env from "../config/env.js";
 
 export async function createbmi(req, res) {
   const body = req.body;
-  const cookie = req.cookies;
   if (!body) {
     return res.status(400).json({ detail: "Request body is required" });
   }
 
   const { weight, height } = body;
-  const rmheight = height/100;
-  const mheight = rmheight * rmheight;
-  const bmi = weight / mheight;
-  try {
-    const decodedUser = jwt.verify(token, env.JWT_ACCESS);
-    const userId = decodedUser.userId;
+  if (!weight || !height) {
+    return res.status(400).json({ detail: "Height and weight are required" });
+  }
 
-    const bmi = await Bmi.create({
-      userId,
+  const rmheight = height / 100;
+  const mheight = rmheight * rmheight;
+  const calculatedBmi = weight / mheight;
+
+  try {
+    const bmiRecord = await Bmi.create({
+      userId: req.user._id,
       height,
       weight,
-      bmi
+      bmi: calculatedBmi,
     });
 
-    res.json({ BMI: `${bmi}` });
+    return res.status(201).json({ bmi: bmiRecord });
   } catch (e) {
     console.log(e);
-    res.status(500).send({ detail: "Something went wrong!!" });
+    return res.status(500).json({ detail: "Something went wrong!!" });
   }
 }
 
 export async function getBmi(req, res) {
   try {
     const bmis = await Bmi.find({
-        userId:
+      userId: req.user._id,
     });
     return res.json({ bmis });
   } catch (e) {
     return res.status(500).json({ detail: "Something went wrong!" });
   }
 }
-
-
-//export async function getProfile(req, res) {
-//  res.json(req.bmi);
-//}
