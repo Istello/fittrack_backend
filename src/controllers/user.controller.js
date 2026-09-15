@@ -8,101 +8,78 @@ import jwt from "jsonwebtoken";
 import env from "../config/env.js";
 import { userValidator } from "../validators/user.validator.js";
 
+     
+
 export async function signup(req, res) {
   const body = req.body;
+
   if (!body) {
-    return res.status(400).json({ detail: "Request body is required" });
+    return res.status(400).json({
+      detail: "Request body is required"
+    });
   }
 
-  const { error, value } = userValidator.validate(body, { abortEarly: false });
+  const { error, value } = userValidator.validate(body, {
+    abortEarly: false
+  });
 
   if (error) {
-    return res.status(400).send({ errors: error.details });
+    return res.status(400).json({
+      errors: error.details
+    });
   }
 
-  const { username, password, email } = body;
+  const { username, password, email } = value;
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  // if the email is invalid
   if (!emailRegex.test(email)) {
-    return res.status(400).send({ detail: "Invalid e-mail address" });
+    return res.status(400).json({
+      detail: "Invalid e-mail address"
+    });
   }
 
-  //   Checking if email exists
-  const emailExistsUser = await User.findOne({ email: email });
+  const emailExistsUser = await User.findOne({ email });
 
   if (emailExistsUser) {
-    return res.status(409).json({ detail: "Email already exists" });
+    return res.status(409).json({
+      detail: "Email already exists"
+    });
   }
-  //   Checking if username exists
-  const usernameExistsUser = await User.findOne({ username: username });
+
+  const usernameExistsUser = await User.findOne({ username });
+
   if (usernameExistsUser) {
-    return res.status(409).json({ detail: "Username already exists" });
+    return res.status(409).json({
+      detail: "Username already exists"
+    });
   }
+
   try {
     const passwordHash = await bcrypt.hash(password, 12);
 
     const user = await User.create({
       username,
       email,
-      password: passwordHash,
+      password: passwordHash
     });
 
-    const { password: removedPassword, ...modifiedUser } = user.toObject();
+    const {
+      password: removedPassword,
+      ...modifiedUser
+    } = user.toObject();
 
-    res.status(200).send({ detail: "Account Created successfully", user: modifiedUser }).json({detail: "Account created successfully"});
-  } catch (e) {
-    console.log(e);
-    res.status(500).send({ detail: "Something went wrong!!" }).json({detail: "something went wrong"});
-  }
-}
-
-export async function getUsers(req, res) {
-  try {
-    const users = await User.find();
-    return res.json({ users });
-  } catch (e) {
-    return res.status(500).json({ detail: "Something went wrong!" });
-  }
-}
-
-export async function signin(req, res) {
-  const body = req.body;
-  if (!body) {
-    return res.status(400).json({ detail: "request body cannot be empty" });
-  }
-  const { password, usernameOrEmail } = body;
-
-  if (!(password && usernameOrEmail)) {
-    return res.status(400).send({
-      detail: "All fields are required",
-      fields: ["password", "usernameOrEmail"],
+    return res.status(201).json({
+      detail: "Account created successfully",
+      user: modifiedUser
     });
-  }
-  try {
-    const user = await User.findOne({
-      $or: [{ username: usernameOrEmail }, { email: usernameOrEmail }],
-    }).select("+password");
 
-    if (!user) {
-      return res.status(401).json({ detail: "Invalid login credentials" });
-    }
-    // checking if password is correct.........
-    const isCorrect = await user.comparePassword(password);
-    if (!isCorrect) {
-      return res.status(401).json({ detail: "Invalid login credentials" });
-    }
-    // return a web token
-    const tokens = {
-      accessToken: generateAccessToken(user),
-      refreshToken: generateRefreshToken(user),
-    };
-    return res.json(tokens);
   } catch (e) {
     console.log(e);
 
-    return res.status(500).json({ detail: "An error occured" });
+    return res.status(500).json({
+      detail: "Something went wrong"
+    });
   }
 }
 
