@@ -1,7 +1,10 @@
+import mongoose from "mongoose";
+
 const bmiSchema = new mongoose.Schema(
   {
     userId: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
       required: true,
     },
     height: {
@@ -19,6 +22,7 @@ const bmiSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  },
+  }
 );
-export default mongoose.model("Bmi", bmiSchema)
+
+export default mongoose.model("Bmi", bmiSchema);
