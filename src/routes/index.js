@@ -1,6 +1,6 @@
 import { Router } from "express";
 import userRouter from "./user.routes.js";
-import bmiRouter from "./user.routes.js";
+import bmiRouter from "./bmi.routes.js";
 
 const router = Router();
 
